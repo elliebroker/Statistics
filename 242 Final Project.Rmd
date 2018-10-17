@@ -1,0 +1,490 @@
+---
+title: "242 final project"
+author: "Ellie Broker"
+date: "5/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+cardio <- read.csv("~/echocardiogram.csv")
+```
+
+```{r}
+cardio1 <- cardio %>%
+  select(survival, age, pericardialeffusion, fractionalshortening, epss, lvdd, wallmotion.index, wallmotion.score)
+```
+
+```{r}
+cardio1 <- na.omit(cardio1)
+```
+
+```{r}
+best.subset <- regsubsets(survival~.,cardio1,nvmax = 8)
+sum <- summary(best.subset)
+sum$outmat
+```
+
+```{r}
+reg <- lm(survival ~age + pericardialeffusion+fractionalshortening + epss+lvdd+wallmotion.index+wallmotion.score, data = cardio1)
+summary(reg)
+
+reg1 <- lm(survival ~ age + pericardialeffusion+fractionalshortening + epss+wallmotion.index+wallmotion.score, data = cardio1)
+summary(reg1)
+
+reg2 <- lm(survival ~ age +fractionalshortening + epss+wallmotion.index+wallmotion.score, data = cardio1)
+summary(reg2)
+
+reg3 <- lm(survival ~ age + fractionalshortening + epss+wallmotion.score, data = cardio1)
+summary(reg3)
+
+reg4 <- lm(survival ~ age + epss+wallmotion.score, data = cardio1)
+summary(reg4)
+
+reg5 <- lm(survival ~ age +wallmotion.score, data = cardio1)
+summary(reg5)
+
+reg6 <- lm(survival ~ age +wallmotion.index, data = cardio1)
+summary(reg6)
+
+cor(cardio1)
+```
+
+```{r}
+reg14 <- lm(survival~ age + fractionalshortening+epss+lvdd+wallmotion.index+wallmotion.score, data = cardio1)
+summary(reg14)
+
+reg15 <- lm(survival~ age+fractionalshortening+epss+wallmotion.index, data = cardio1)
+summary(reg15)
+
+reg16 <- lm(survival~ age+fractionalshortening+epss+wallmotion.score, data= cardio1)
+summary(reg16)
+
+reg17 <- lm(survival~ age+fractionalshortening+lvdd+wallmotion.index, data = cardio1)
+summary(reg17)
+
+reg18 <- lm(survival~ age+fractionalshortening+lvdd+wallmotion.score, data= cardio1)
+summary(reg18)
+
+reg19 <- lm(survival~ age+wallmotion.score, data = cardio1)
+summary(reg19)
+```
+
+```{r}
+cardio2 <- cbind(cardio1,reg6$residuals)
+
+cardio2 %>%
+  ggplot(aes(reg6$residuals))+
+  geom_histogram(fill = "pink", colour = "dark grey",bins = 25)
+
+shapiro.test(reg6$residuals)
+qqnorm(reg16$residuals)
+
+cardio2 <- cbind(cardio2,reg6$fitted.values)
+
+cardio2 %>%
+  ggplot(aes(reg6$fitted.values,reg6$residuals)) +
+  geom_point()
+
+ncvTest(reg6)
+qqnorm(reg6$fitted.values)
+```
+The residual histogram is slightly skewed, but mostly normal. 
+The low p-value on the Shapiro-Wilks normality test rejects the null hypothesis that the data is from a normally distributed population of data. 
+The Normal Q-Q Plot is not a perfectlu straight line, but it is not bad, so the normality of the data does not look bad. 
+The points seem to be slightly heteroskedastistic becuase the distribution spans from 40 to -20, which means that the points are not spread equally and there is some organization to the points. The variance across the regression line is not the same for all of the points. 
+The null hypothesis for the ncV test is that the data is homoskedastistic, but since the p-value is high for the test we fail to reject the null hypothesis. 
+
+##TRANSFORMATIONS###
+
+```{r}
+reg6 <- lm(survival ~ age +wallmotion.index, data = cardio1)
+summary(reg6)
+
+cardio1 <- cardio1 %>% mutate(logsur = log(survival))
+cardio1 <- cardio1 %>% mutate(logage = log(age))
+cardio1 <- cardio1 %>% mutate(logindex = log(wallmotion.index))
+cardio1 <- cardio1 %>% mutate(sqrtsur = sqrt(survival))
+cardio1 <- cardio1 %>% mutate(sqrtage = sqrt(age))
+cardio1 <- cardio1 %>% mutate(sqrtindex = sqrt(wallmotion.index))
+cardio1 <- cardio1 %>% mutate(sur2 = (survival)^2)
+cardio1 <- cardio1 %>% mutate(age2 = (age)^2)
+cardio1 <- cardio1 %>% mutate(index2 = (wallmotion.index)^2)
+
+reg20 <- lm(logsur ~ age +wallmotion.index, data = cardio1)
+summary(reg20)
+
+reg21 <- lm(logsur ~ logage +wallmotion.index, data = cardio1)
+summary(reg21)
+
+reg22 <- lm(logsur ~ logage +logindex, data = cardio1)
+summary(reg22)
+
+reg23 <- lm(logsur ~ age2 +logindex, data = cardio1)
+summary(reg23)
+
+reg24 <- lm(logsur ~ logage +index2, data = cardio1)
+summary(reg24)
+
+reg25 <- lm(logsur ~ age2 +wallmotion.index, data = cardio1)
+summary(reg25)
+
+reg26 <- lm(logsur ~ age +index2, data = cardio1)
+summary(reg26)
+
+reg27 <- lm(logsur ~ age +logindex, data = cardio1)
+summary(reg27)
+
+reg28 <- lm(logsur ~ sqrtage +sqrtindex, data = cardio1)
+summary(reg28)
+
+reg29 <- lm(logsur ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg29)
+
+reg30 <- lm(logsur ~ age +sqrtindex, data = cardio1)
+summary(reg30)
+
+reg31 <- lm(logsur ~ sqrtage +logindex, data = cardio1)
+summary(reg31)
+
+reg32<- lm(logsur ~ logage +sqrtindex, data = cardio1)
+summary(reg32)
+
+reg33<- lm(logsur ~ age2 +index2, data = cardio1)
+summary(reg33)
+
+reg34<- lm(logsur ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg34)
+
+reg35<- lm(logsur ~ age2 +sqrtindex, data = cardio1)
+summary(reg35)
+
+
+
+
+
+
+reg36 <- lm(sur2 ~ age +wallmotion.index, data = cardio1)
+summary(reg36)
+
+reg37 <- lm(sur2 ~ logage +wallmotion.index, data = cardio1)
+summary(reg37)
+
+reg38 <- lm(sur2 ~ logage +logindex, data = cardio1)
+summary(reg38)
+
+reg39 <- lm(sur2 ~ age2 +logindex, data = cardio1)
+summary(reg39)
+
+reg40 <- lm(sur2 ~ logage +index2, data = cardio1)
+summary(reg40)
+
+reg41 <- lm(sur2 ~ age2 +wallmotion.index, data = cardio1)
+summary(reg41)
+
+reg42 <- lm(sur2 ~ age +index2, data = cardio1)
+summary(reg42)
+
+reg43 <- lm(sur2 ~ age +logindex, data = cardio1)
+summary(reg43)
+
+reg44 <- lm(sur2 ~ sqrtage +sqrtindex, data = cardio1)
+summary(reg44)
+
+reg45 <- lm(sur2 ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg45)
+
+reg46 <- lm(sur2 ~ age +sqrtindex, data = cardio1)
+summary(reg46)
+
+reg47 <- lm(sur2 ~ sqrtage +logindex, data = cardio1)
+summary(reg47)
+
+reg48<- lm(sur2 ~ logage +sqrtindex, data = cardio1)
+summary(reg48)
+
+reg49<- lm(sur2 ~ age2 +index2, data = cardio1)
+summary(reg49)
+
+reg50<- lm(sur2 ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg50)
+
+reg51<- lm(sur2 ~ age2 +sqrtindex, data = cardio1)
+summary(reg51)
+
+
+
+
+
+
+reg52 <- lm(sqrtsur ~ age +wallmotion.index, data = cardio1)
+summary(reg52)
+
+reg53 <- lm(sqrtsur ~ logage +wallmotion.index, data = cardio1)
+summary(reg53)
+
+reg54 <- lm(sqrtsur ~ logage +logindex, data = cardio1)
+summary(reg54)
+
+reg55 <- lm(sqrtsur ~ age2 +logindex, data = cardio1)
+summary(reg55)
+
+reg56 <- lm(sqrtsur ~ logage +index2, data = cardio1)
+summary(reg56)
+
+reg57<- lm(sqrtsur ~ age2 +wallmotion.index, data = cardio1)
+summary(reg57)
+
+reg58 <- lm(sqrtsur ~ age +index2, data = cardio1)
+summary(reg58)
+
+reg59 <- lm(sqrtsur ~ age +logindex, data = cardio1)
+summary(reg59)
+
+reg60 <- lm(sqrtsur ~ sqrtage +sqrtindex, data = cardio1)
+summary(reg60)
+
+reg61 <- lm(sqrtsur ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg61)
+
+reg62 <- lm(sqrtsur ~ age +sqrtindex, data = cardio1)
+summary(reg62)
+
+reg63 <- lm(sqrtsur ~ sqrtage +logindex, data = cardio1)
+summary(reg63)
+
+reg64<- lm(sqrtsur ~ logage +sqrtindex, data = cardio1)
+summary(reg64)
+
+reg65<- lm(sqrtsur ~ age2 +index2, data = cardio1)
+summary(reg65)
+
+reg66<- lm(sqrtsur ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg66)
+
+reg67<- lm(sqrtsur ~ age2 +sqrtindex, data = cardio1)
+summary(reg67)
+
+reg68<- lm(survival ~ logage +logindex, data = cardio1)
+summary(reg68)
+
+reg69<- lm(survival ~ logage +index2, data = cardio1)
+summary(reg6)
+
+reg70<- lm(survival ~ logage +sqrtindex, data = cardio1)
+summary(reg70)
+
+reg83<- lm(survival ~ logage +wallmotion.index, data = cardio1)
+summary(reg83)
+
+reg71<- lm(survival ~ age2 +index2, data = cardio1)
+summary(reg71)
+
+reg72<- lm(survival ~ age2 +logindex, data = cardio1)
+summary(reg72)
+
+reg73<- lm(survival ~ age2 +sqrtindex, data = cardio1)
+summary(reg73)
+
+reg74<- lm(survival ~ age2 +wallmotion.index, data = cardio1)
+summary(reg74)
+
+reg75<- lm(survival ~ sqrtage +wallmotion.index, data = cardio1)
+summary(reg75)
+
+reg76<- lm(survival ~ sqrtage +index2, data = cardio1)
+summary(reg76)
+
+reg76<- lm(survival ~ sqrtage +logindex, data = cardio1)
+summary(reg76)
+
+reg77<- lm(survival ~ sqrtage +sqrtindex, data = cardio1)
+summary(reg77)
+
+reg78<- lm(survival ~ age +logindex, data = cardio1)
+summary(reg78)
+
+reg79<- lm(survival ~ age +sqrtindex, data = cardio1)
+summary(reg79)
+
+reg80<- lm(survival ~ age +index2, data = cardio1)
+summary(reg80)
+```
+
+```{r}
+reg33<- lm(logsur ~ age2 +index2, data = cardio1)
+summary(reg33)
+
+cardio2 <- cbind(cardio1,reg33$residuals)
+
+cardio2 %>%
+  ggplot(aes(reg33$residuals))+
+  geom_histogram(fill = "pink", colour = "dark grey",bins = 25)
+
+shapiro.test(reg33$residuals)
+qqnorm(reg16$residuals)
+
+cardio2 <- cbind(cardio2,reg33$fitted.values)
+
+cardio2 %>%
+  ggplot(aes(reg33$fitted.values,reg33$residuals)) +
+  geom_point()
+
+ncvTest(reg33)
+qqnorm(reg33$fitted.values)
+```
+
+
+The residual histogram is slightly skewed. 
+The low p-value on the Shapiro-Wilks normality test rejects the null hypothesis that the data is from a normally distributed population of data. 
+The Normal Q-Q Plot is not a perfectlu straight line, but it is not bad, so the normality of the data does not look bad. 
+The points seem to be slightly heteroskedastistic becuase the distribution spans from -4 to just above 2. The graph looks slightly beter than before the tansformations. 
+The null hypothesis for the ncV test is that the data is homoskedastistic, but since the p-value is low for the test we reject the null hypothesis. This means that the data is homoskedastistic. This means that the reansformations did improve the homoskedasticity. 
+
+```{r}
+cardio1 %>%
+  ggplot(aes(age, reg6$residuals))+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y~poly(x,2), color = "red")+ 
+  geom_smooth(method="lm")+
+  labs(title = "Residual plot with age")+ 
+  theme_classic()
+
+cardio1 %>%
+  ggplot(aes(wallmotion.index, reg6$residuals))+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y~poly(x,2), color = "red")+ 
+  geom_smooth(method="lm")+
+  labs(title = "Residual plot with Wall Motion Index")+ 
+  theme_classic()
+
+cardio1 %>%
+  ggplot(aes(index2, reg33$residuals))+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y~poly(x,2), color = "red")+ 
+  geom_smooth(method="lm")+
+  labs(title = "Residual plot with Wall Motion Index Squared")+ 
+  theme_classic()
+
+cardio1 %>%
+  ggplot(aes(age2, reg33$residuals))+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y~poly(x,2), color = "red")+ 
+  geom_smooth(method="lm")+
+  labs(title = "Residual plot with Age Squared")+ 
+  theme_classic()
+```
+The residual plot for age and age squared do not have a clear pattern, but they are not equally distributed above and below 0. The residual plot for wall motion index and wall motion index squared are grouped to the left, but do not have a clear pattern. The points do not span equally above and below 0 becuase they range from 40 to -20 and -4 to 2. 
+
+
+```{r}
+reg65<- lm(sqrtsur ~ age2 +index2, data = cardio1)
+summary(reg65)
+coeftest(reg65,vcov = vcovHC(reg65))
+
+cardio2 <- cbind(cardio1,reg65$residuals)
+
+cardio2 %>%
+  ggplot(aes(reg65$residuals))+
+  geom_histogram(fill = "pink", colour = "dark grey",bins = 25)
+
+shapiro.test(reg65$residuals)
+qqnorm(reg16$residuals)
+
+cardio2 <- cbind(cardio2,reg65$fitted.values)
+
+cardio2 %>%
+  ggplot(aes(reg65$fitted.values,reg65$residuals)) +
+  geom_point()
+
+ncvTest(reg65)
+qqnorm(reg65$fitted.values)
+```
+
+The residual histogram is mostly normally distributed. 
+The high p-value on the Shapiro-Wilks normality test fails to reject the null hypothesis that the data is from a normally distributed population of data. 
+The Normal Q-Q Plot is not a perfectly straight line, but it is not bad, so the normality of the data does not look bad. 
+The points seem to be slightly heteroskedastistic becuase the distribution spans from -2.5 to 5, which means that the points are not spread equally and there is some organization to the points. The variance across the regression line is not the same for all of the points. This does look better than the other graphs though. 
+The null hypothesis for the ncV test is that the data is homoskedastistic, but since the p-value is low for the test we reject the null hypothesis. 
+
+
+```{r}
+cardio1 <- cardio1 %>% mutate(logsqrtsur = log(sqrt(survival)))
+reg81<- lm(logsqrtsur ~ age2 +index2, data = cardio1)
+summary(reg81)
+```
+
+##TRIED TO GET HOMOSKEDASTICITY BUT LOST NORMALITY###
+
+```{r}
+
+summary(reg81)
+
+cardio2 <- cbind(cardio1,reg81$residuals)
+
+cardio2 %>%
+  ggplot(aes(reg81$residuals))+
+  geom_histogram(fill = "pink", colour = "dark grey",bins = 25)
+
+shapiro.test(reg81$residuals)
+qqnorm(reg16$residuals)
+
+cardio2 <- cbind(cardio2,reg81$fitted.values)
+
+cardio2 %>%
+  ggplot(aes(reg81$fitted.values,reg81$residuals)) +
+  geom_point()
+
+ncvTest(reg81)
+qqnorm(reg81$fitted.values)
+```
+
+The residual histogram is mostly normally distributed, but a little skewed to the right. 
+The low p-value on the Shapiro-Wilks normality test rejects the null hypothesis that the data is from a normally distributed population of data. 
+The Normal Q-Q Plot is not a perfectly straight line, but it is not bad, so the normality of the data does not look bad. 
+The points seem to be slightly heteroskedastistic becuase the distribution spans from -2.5 to 5, which means that the points are not spread equally and there is some organization to the points. The variance across the regression line is not the same for all of the points. This does look better than the other graphs though. 
+The null hypothesis for the ncV test is that the data is homoskedastistic and the p-value is high for the test we fail to reject the null hypothesis. 
+
+
+```{r}
+reg82 <- lm(logsur ~ age2 +index2, data = cardio1, family = poisson)
+summary(reg82)
+
+cardio2 <- cbind(cardio1,reg82$residuals)
+
+cardio2 %>%
+  ggplot(aes(reg82$residuals))+
+  geom_histogram(fill = "pink", colour = "dark grey",bins = 25)
+
+shapiro.test(reg82$residuals)
+qqnorm(reg82$residuals)
+
+cardio2 <- cbind(cardio2,reg81$fitted.values)
+
+cardio2 %>%
+  ggplot(aes(reg82$fitted.values,reg81$residuals)) +
+  geom_point()
+
+ncvTest(reg82)
+qqnorm(reg82$fitted.values)
+```
+
+The residual histogram is mostly normally distributed, but a little skewed to the left. 
+The low p-value on the Shapiro-Wilks normality test rejects the null hypothesis that the data is from a normally distributed population of data, but the normality is very close to it being rejected so the data is not too far from normal. 
+The Normal Q-Q Plot is not a perfectly straight line, but it is not bad, so the normality of the data does not look horrible. 
+The points seem to be homoskedastistic. This does look better than the other graphs and models. 
+The null hypothesis for the ncV test is that the data is homoskedastistic and the p-value is high for the test we fail to reject the null hypothesis. 
+
+
+robust standard errors for homoskedasticity 
+reg <- lm(Percent.Unemployed.of.the.Civilian.Labor.Force..age.16..~Percent.of.the.Population.with.Bachelor.s.Degree.or.more..age.25..,Pol)
+summary(reg)
+coeftest(reg,vcov = vcovHC(reg))
+
+
+```{r}
+summary(reg65)
+```
